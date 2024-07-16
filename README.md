@@ -9,7 +9,7 @@ This project aims to develop a bot that automates the process of applying to Eas
 - Setup for Selenium WebDriver.
 - Login functionality.
 - Job search functionality.
-- Initial job collection functionality.
+- Initial job collection functionality in function of pages to be navigated.
 
 ## To-Do
 
