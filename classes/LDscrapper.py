@@ -29,7 +29,8 @@ class LinkedinDriver: #Using Selenium due some issues with BeautifulSoup
         self._setup_driver()
         self.job_urls = []
         self.job_titles = []
-        self.collected = len(self.job_urls)
+        self.collected = 0
+        self.page_index = 0
 
 
     def login(self):
@@ -39,34 +40,52 @@ class LinkedinDriver: #Using Selenium due some issues with BeautifulSoup
         email_field.send_keys(self.email, Keys.ENTER)
         psw_field = self.driver.find_element(By.ID, "password")
         psw_field.send_keys(self.password, Keys.ENTER)
+        time.sleep(10)
     
 
     def search_easy_apply_jobs(self):
+        self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, "application-outlet")))
         self.driver.get("https://www.linkedin.com/jobs/search/?currentJobId=3971455036&f_AL=true&origin=JOB_SEARCH_PAGE_JOB_FILTER")
-        time.sleep(5)
+        time.sleep(6)
 
-    def collect_jobs(self):
-        # Execute JavaScript to extract job links and titles
-        jobs = self.driver.execute_script("""
-            let jobElements = document.querySelectorAll('ul.scaffold-layout__list-container > li');
-            let jobs = [];
-            jobElements.forEach((job) => {
-                let titleElement = job.querySelector('a.job-card-list__title');
-                let linkElement = job.querySelector('a.job-card-list__title');
-                if (titleElement && linkElement) {
-                    let jobTitle = titleElement.innerText;
-                    let jobLink = linkElement.href;
-                    jobs.push({title: jobTitle, link: jobLink});
-                }
-            });
-            return jobs;
-        """)
+    def collect_jobs(self, page_index=0, pages=3):
+        if pages <= 0:
+            return
 
-        for job in jobs:
-            self.job_titles.append(job['title'])
-            self.job_urls.append(job['link'])
+        try:
+            jobs = self.driver.execute_script("""
+                let jobElements = document.querySelectorAll('ul.scaffold-layout__list-container > li');
+                let jobs = [];
+                jobElements.forEach((job) => {
+                    let titleElement = job.querySelector('a.job-card-list__title');
+                    let linkElement = job.querySelector('a.job-card-list__title');
+                    if (titleElement && linkElement) {
+                        let jobTitle = titleElement.innerText;
+                        let jobLink = linkElement.href;
+                        jobs.push({title: jobTitle, link: jobLink});
+                    }
+                });
+                return jobs;
+            """)
 
-        return jobs
+            for job in jobs:
+                if job['title'] not in self.job_titles and job['link'] not in self.job_urls:
+                    self.job_titles.append(job['title'])
+                    self.job_urls.append(job['link'])
+
+            self.collected += len(jobs)
+            self.page_index = page_index + 25
+
+            print(f"Collected {len(jobs)} jobs from page {page_index // 25 + 1}")
+            print(f"Total jobs collected: {len(self.job_titles)}")
+
+            if pages - 1 > 0:
+                self.driver.get(f"https://www.linkedin.com/jobs/search/?currentJobId=3945795600&f_AL=true&origin=JOB_SEARCH_PAGE_JOB_FILTER&start={self.page_index}")
+                time.sleep(10)
+                self.collect_jobs(self.page_index, pages - 1)
+
+        except Exception as e:
+            print(f"No se pueden recoger más trabajos: {str(e)}")
         
 
     def close(self):

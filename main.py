@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from classes.LDscrapper import LinkedinDriver
 
 def main():
@@ -5,12 +7,12 @@ def main():
     try:
         ldriver.login()
         ldriver.search_easy_apply_jobs()
-        jobs = ldriver.collect_jobs()
-        for i in range (len(jobs)):
-            print(f"Job {i+1}",ldriver.job_titles[i], "\n")
-    
+        ldriver.collect_jobs(pages=2)  # Indica cuántas páginas deseas navegar
+        for i, title in enumerate(ldriver.job_titles):
+            print(f"Job {i+1}: {title}\n")
+
     except Exception as e:
-        print(f"Error logging in. ERROR {e}")
+        print(f"ERROR: {e}")
     finally:
         ldriver.close()
 
