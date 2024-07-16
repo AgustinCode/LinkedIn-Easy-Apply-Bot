@@ -13,8 +13,6 @@ This project aims to develop a bot that automates the process of applying to Eas
 
 ## To-Do
 
-- Complete the Easy Apply job detection.
 - Automate the job application submission process.
 - Add error handling and logging.
 - Improve user interface and customization options.
-- Avoid getting ip blocked
