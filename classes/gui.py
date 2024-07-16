@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from classes.LDscrapper import LinkedinDriver
+import os
 
 class LinkedInBotApp:
     """
@@ -8,17 +9,35 @@ class LinkedInBotApp:
     """
 
     def __init__(self, root):
-        """
-        Initialize the LinkedInBotApp.
-
-        Args:
-            root (tk.Tk): The root window for the application.
-        """
         self.root = root
         self.root.title("LinkedIn Easy Apply Bot")
         self.root.geometry('720x400')
+        
+        #Icon
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir)
+        icon_path = os.path.join(project_root, "icon", "iconapp.png")
+        
+        try:
+            self.icon = tk.PhotoImage(file=icon_path)
+            self.root.iconphoto(True, self.icon)
+        except tk.TclError as e:
+            print(f"Error loading icon: {e}")
+            print(f"Attempted to load icon from: {icon_path}")
+        
         self.create_widgets()
         self.ldriver = None
+
+    def clear_listbox(self):
+        if self.ldriver and self.ldriver.collected > 0:
+            self.job_listbox.delete(0, tk.END)
+            self.ldriver.job_titles.clear()
+            self.ldriver.job_urls.clear()
+            self.ldriver.collected = 0
+            messagebox.showinfo(message="Listbox cleared successfully", title="Success")
+        else:
+            messagebox.showinfo(message="Listbox is already empty", title="Info")
+
 
     def create_widgets(self):
         """
@@ -46,12 +65,14 @@ class LinkedInBotApp:
         apply_button = tk.Button(self.root, text="Apply", command=self.apply_jobs)
         apply_button.grid(row=3, column=0, sticky="we")
 
-        button3 = tk.Button(self.root, text="Button 3")
-        button3.grid(row=3, column=2, sticky="we")
-
         # Job listbox with scrollbar
         self.job_listbox = tk.Listbox(self.root, selectmode="multiple")
         self.job_listbox.grid(row=4, column=0, columnspan=3, sticky="nsew")
+
+        #Clear button
+        clear_button = tk.Button(self.root, text="Clear", command=self.clear_listbox)
+        clear_button.grid(row=3, column=2, sticky="we")
+
 
         scrollbar = tk.Scrollbar(self.root, orient="vertical", command=self.job_listbox.yview)
         scrollbar.grid(row=4, column=3, sticky="ns")
@@ -59,6 +80,7 @@ class LinkedInBotApp:
 
         self.root.grid_rowconfigure(4, weight=1)
         self.root.grid_columnconfigure(1, weight=1)
+
 
     def apply_jobs(self):
         """
@@ -75,6 +97,7 @@ class LinkedInBotApp:
             print(job)
         messagebox.showinfo(message="Jobs selected for application.", title="Success")
 
+
     def run_bot(self):
         """
         Execute the LinkedIn bot to collect job listings.
@@ -86,14 +109,17 @@ class LinkedInBotApp:
         self.ldriver = LinkedinDriver(email, password)
         try:
             messagebox.showinfo(message="Collecting data.. Complete security checks", title="Process running.")
-            self.ldriver.login()
-            self.ldriver.search_easy_apply_jobs()
-            self.ldriver.collect_jobs(pages=pages)
+            if(self.ldriver.login()):
+                self.ldriver.search_easy_apply_jobs()
+                self.ldriver.collect_jobs(pages=pages)
             
-            self.job_listbox.delete(0, tk.END)  # Clear previous results
-            for i, title in enumerate(self.ldriver.job_titles):
-                self.job_listbox.insert(tk.END, f"Job {i+1}: {title}")
-            messagebox.showinfo(message="Data collected. Select the jobs you want to apply", title="Success")
+                self.clear_listbox()  # Clear previous results
+                for i, title in enumerate(self.ldriver.job_titles):
+                    self.job_listbox.insert(tk.END, f"Job {i+1}: {title}")
+                messagebox.showinfo(message="Data collected. Select the jobs you want to apply", title="Success")
+            else:
+                messagebox.showerror(message="Invalid credentials", title="ERROR")
+        
         except Exception as e:
             print(f"ERROR: {e}")
             messagebox.showerror(message=f"An error occurred: {e}", title="Error")

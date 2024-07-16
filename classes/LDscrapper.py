@@ -28,7 +28,7 @@ class LinkedinDriver:
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
         self.wait = WebDriverWait(self.driver, 10)
 
-    def __init__(self, email, password):
+    def __init__(self, email, password, collected = 0):
         """
         Initialize the LinkedinDriver with user credentials.
 
@@ -45,7 +45,7 @@ class LinkedinDriver:
         self.page_index = 0
         self.listed_jobs = []
 
-    def login(self):
+    def login(self) -> bool:
         """
         Log in to LinkedIn using the provided credentials.
         """
@@ -55,7 +55,10 @@ class LinkedinDriver:
         email_field.send_keys(self.email, Keys.ENTER)
         psw_field = self.driver.find_element(By.ID, "password")
         psw_field.send_keys(self.password, Keys.ENTER)
-        time.sleep(10)
+        time.sleep(2)
+        if(EC.presence_of_element_located((By.CLASS_NAME, "error-for-username")) or EC.presence_of_element_located((By.ID, "error-for-password"))):
+            return False
+        return True
 
     def search_easy_apply_jobs(self):
         """
@@ -110,6 +113,7 @@ class LinkedinDriver:
 
         except Exception as e:
             print(f"Unable to collect more jobs: {str(e)}")
+
 
     def close(self):
         """
