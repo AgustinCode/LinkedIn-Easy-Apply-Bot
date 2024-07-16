@@ -8,22 +8,34 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 
-
-class LinkedinDriver: #Using Selenium due some issues with BeautifulSoup
+class LinkedinDriver:
+    """
+    A class to automate interactions with LinkedIn using Selenium.
+    This class is used instead of BeautifulSoup due to some issues with the latter.
+    """
 
     def _setup_driver(self):
+        """
+        Set up the Chrome driver with specific options.
+        """
         chrome_options = Options()
         chrome_options.add_argument("--disable-notifications")
         chrome_options.add_argument("--disable-extensions")
-        chrome_options.add_argument("--force-device-scale-factor=0.6") 
+        chrome_options.add_argument("--force-device-scale-factor=0.6")
         chrome_options.add_argument("--lang=en-US")
 
         service = Service(ChromeDriverManager().install())
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
         self.wait = WebDriverWait(self.driver, 10)
 
-
     def __init__(self, email, password):
+        """
+        Initialize the LinkedinDriver with user credentials.
+
+        Args:
+            email (str): User's LinkedIn email.
+            password (str): User's LinkedIn password.
+        """
         self.email = email
         self.password = password
         self._setup_driver()
@@ -31,9 +43,12 @@ class LinkedinDriver: #Using Selenium due some issues with BeautifulSoup
         self.job_titles = []
         self.collected = 0
         self.page_index = 0
-
+        self.listed_jobs = []
 
     def login(self):
+        """
+        Log in to LinkedIn using the provided credentials.
+        """
         self.driver.get("https://www.linkedin.com/login/")
 
         email_field = self.wait.until(EC.presence_of_element_located((By.ID, "username")))
@@ -41,14 +56,23 @@ class LinkedinDriver: #Using Selenium due some issues with BeautifulSoup
         psw_field = self.driver.find_element(By.ID, "password")
         psw_field.send_keys(self.password, Keys.ENTER)
         time.sleep(10)
-    
 
     def search_easy_apply_jobs(self):
+        """
+        Navigate to the LinkedIn Easy Apply jobs search page.
+        """
         self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, "application-outlet")))
         self.driver.get("https://www.linkedin.com/jobs/search/?currentJobId=3971455036&f_AL=true&origin=JOB_SEARCH_PAGE_JOB_FILTER")
         time.sleep(6)
 
     def collect_jobs(self, page_index=0, pages=3):
+        """
+        Collect job listings from LinkedIn.
+
+        Args:
+            page_index (int): Starting page index for job collection.
+            pages (int): Number of pages to collect jobs from.
+        """
         if pages <= 0:
             return
 
@@ -85,13 +109,11 @@ class LinkedinDriver: #Using Selenium due some issues with BeautifulSoup
                 self.collect_jobs(self.page_index, pages - 1)
 
         except Exception as e:
-            print(f"No se pueden recoger más trabajos: {str(e)}")
-        
+            print(f"Unable to collect more jobs: {str(e)}")
 
     def close(self):
+        """
+        Close the browser and end the session.
+        """
         if self.driver:
             self.driver.quit()
-
-
-
-    

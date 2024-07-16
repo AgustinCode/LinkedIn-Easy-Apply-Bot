@@ -1,20 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from classes.LDscrapper import LinkedinDriver
+import tkinter as tk
+from classes.gui import LinkedInBotApp
 
 def main():
-    ldriver = LinkedinDriver("relaxingscript@gmail.com", "testtest123")
-    try:
-        ldriver.login()
-        ldriver.search_easy_apply_jobs()
-        ldriver.collect_jobs(pages=2)  # Indica cuántas páginas deseas navegar
-        for i, title in enumerate(ldriver.job_titles):
-            print(f"Job {i+1}: {title}\n")
-
-    except Exception as e:
-        print(f"ERROR: {e}")
-    finally:
-        ldriver.close()
+    root = tk.Tk()
+    app = LinkedInBotApp(root)
+    root.mainloop()
 
 if __name__ == "__main__":
     main()
